@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PaymentSimple.Core.Abstractions.Repositories;
 using PaymentSimple.Core.Domain;
+using PaymentSimple.Core.Domain.Models;
 
 namespace PaymentSimple.DataAccess.Repositories
 {
@@ -51,6 +52,12 @@ namespace PaymentSimple.DataAccess.Repositories
         {
             _dataContext.Set<T>().Remove(entity);
             await _dataContext.SaveChangesAsync();
+        }
+
+        public async Task <Card>GetCardByNumberAsync (string cardNumber)
+        {
+            var card = _dataContext.Set<Card>().FirstOrDefault(c => c.CardNumber.Equals(cardNumber));
+            return card;
         }
     }
 }

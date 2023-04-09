@@ -33,7 +33,7 @@ namespace PaymentSimple.WebHost.Controllers
                 {
                     Amount = x.PaymentAmount,
                     Currency = x.PaymentCurrency,
-                    HolderName = x.Card.CardNumber,
+                    HolderName = x.Card.CardNumber.HideCardNumber(),
                     Id = x.Id,
                     Status = x.Status.GetStatusValue()
                 }).ToList();
@@ -48,8 +48,7 @@ namespace PaymentSimple.WebHost.Controllers
             if (request.Amount < 0)
                 throw new Exception($"Incorrect amount {request.Amount}");
 
-            var cards = await _cardRepository.GetAllAsync();
-            var card = cards.FirstOrDefault(c => c.CardNumber.Equals(request.CardHolderNumber));
+            var card = _cardRepository.GetCardByNumberAsync(request.CardHolderNumber).Result;
             if (card is null)
                 throw new Exception($"Card with number {request.CardHolderNumber} doesn't exist in system");
 

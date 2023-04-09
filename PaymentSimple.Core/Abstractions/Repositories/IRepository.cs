@@ -1,4 +1,5 @@
 ﻿using PaymentSimple.Core.Domain;
+using PaymentSimple.Core.Domain.Models;
 
 namespace PaymentSimple.Core.Abstractions.Repositories
 {    
@@ -16,5 +17,7 @@ namespace PaymentSimple.Core.Abstractions.Repositories
         Task UpdateAsync(T entity);
 
         Task DeleteAsync(T entity);
+
+        Task<Card> GetCardByNumberAsync(string number);
     }
 }
