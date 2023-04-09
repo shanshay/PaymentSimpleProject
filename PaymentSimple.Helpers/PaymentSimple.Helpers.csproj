@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PaymentSimple.Exceptions\PaymentSimple.Exceptions.csproj" />
+    <ProjectReference Include="..\PaymentSimple.WebHost\PaymentSimple.WebHost.csproj" />
+  </ItemGroup>
+
+</Project>
