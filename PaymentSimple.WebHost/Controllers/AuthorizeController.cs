@@ -68,7 +68,7 @@ namespace PaymentSimple.WebHost.Controllers
             if (request.Amount < 0)
                 throw new IncorrectRequestAmountException(request.Amount);
 
-            var card = _cardRepository.GetCardByNumberAsync(request.CardHolderNumber).Result;
+            var card = await _cardRepository.GetCardByNumberAsync(request.CardHolderNumber);
             if (card is null)
                 throw new CardDoesntExistException(request.CardHolderNumber);
 
@@ -105,7 +105,7 @@ namespace PaymentSimple.WebHost.Controllers
             if (request.Id.Equals(Guid.Empty))
                 throw new Exception("Payment Id is null!");
 
-            var payment = _paymentRepository.GetByIdAsync(request.Id).Result;
+            var payment = await _paymentRepository.GetByIdAsync(request.Id);
             if (payment is null)
                 throw new PaymentDoesntExistException(request.Id.ToString());
 
@@ -137,7 +137,7 @@ namespace PaymentSimple.WebHost.Controllers
             if (request.Id.Equals(Guid.Empty))
                 throw new Exception("Payment Id is null!");
 
-            var payment = _paymentRepository.GetByIdAsync(request.Id).Result;
+            var payment = await _paymentRepository.GetByIdAsync(request.Id);
             if (payment is null)
                 throw new Exception($"Payment with id {request.Id} doesn't exist");
 
