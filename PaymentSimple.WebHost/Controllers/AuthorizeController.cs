@@ -147,7 +147,7 @@ namespace PaymentSimple.WebHost.Controllers
                 PaymentCurrency = payment.PaymentCurrency,
                 CardId = payment.CardId,
                 OrderId = payment.OrderId,
-                Status = (int)Status.Voided
+                Status = (int)Status.Captured
             };
             await _paymentRepository.CreateAsync(capturedPayment);
 
