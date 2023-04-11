@@ -16,5 +16,7 @@ namespace PaymentSimple.Core.Domain.Models
         public string Currency { get; set; }
 
         public virtual List<Payment> Payments { get; set; } = new List<Payment>(); 
+
+        public virtual List<Transaction> Transactions { get; set; } = new List<Transaction>();
     }
 }

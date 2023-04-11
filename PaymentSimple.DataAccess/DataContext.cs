@@ -13,6 +13,8 @@ namespace PaymentSimple.DataAccess
 
         public DbSet<Payment> Payments { get; set; }
 
+        public DbSet<Transaction> Transactions { get; set; }
+
         public DataContext()
         {
 
@@ -48,6 +50,13 @@ namespace PaymentSimple.DataAccess
                 entity.HasKey(e => e.Id);
                 entity.HasOne(d => d.Card).WithMany(p => p.Payments).HasForeignKey(d => d.CardId);
                 entity.HasOne(d => d.Order).WithMany(p => p.Payments).HasForeignKey(d => d.OrderId);
+            });
+
+            modelBuilder.Entity<Transaction>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasOne(d => d.Payment).WithMany(p => p.Transactions).HasForeignKey(d => d.PaymentId);
+                entity.HasOne(d => d.Order).WithMany(p => p.Transactions).HasForeignKey(d => d.OrderId);
             });
         }
 

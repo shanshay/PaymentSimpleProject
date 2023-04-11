@@ -14,14 +14,17 @@ namespace PaymentSimple.WebHost.Controllers
     {
         private readonly IRepository<Payment> _paymentRepository;
         private readonly IRepository<Card> _cardRepository;
+        private readonly IRepository<Transaction> _transactionRepository;
         private readonly int pageSize = 2;
 
         public AuthorizeController(
             IRepository<Payment> paymentRepository,
-            IRepository<Card> cardRepository)
+            IRepository<Card> cardRepository,
+            IRepository<Transaction> transactionRepository)
         {
             _paymentRepository = paymentRepository;
             _cardRepository = cardRepository;
+            _transactionRepository = transactionRepository;
         }
 
         /// <summary>
@@ -31,7 +34,7 @@ namespace PaymentSimple.WebHost.Controllers
         /// <returns></returns>
         /// <exception cref="IncorrectPageValueException"></exception>
         [HttpGet]
-        public async Task<ActionResult<List<PaymentResponse>>> GetAllTransactions(int page = 1)
+        public async Task<ActionResult<List<AuthorizeShortResponse>>> GetAllTransactions(int page = 1)
         {
             if (page <= 0)
                 throw new IncorrectPageValueException(page);
@@ -63,7 +66,7 @@ namespace PaymentSimple.WebHost.Controllers
         /// <exception cref="CardDoesntExistException"></exception>
         /// <exception cref="CardExpiredException"></exception>
         [HttpPost]
-        public async Task<ActionResult<PaymentResponse>> AuthorizePayment(AuthorizeRequest request)
+        public async Task<ActionResult<TransactionResponse>> AuthorizePayment(AuthorizeRequest request)
         {
             if (request.Amount < 0)
                 throw new IncorrectRequestAmountException(request.Amount);
@@ -88,7 +91,10 @@ namespace PaymentSimple.WebHost.Controllers
 
             await _paymentRepository.CreateAsync(payment);
 
-            return new PaymentResponse(payment);
+            var transaction = new Transaction(payment);
+            await _transactionRepository.CreateAsync(transaction);
+
+            return new TransactionResponse(payment);
         }
 
         /// <summary>
@@ -100,7 +106,7 @@ namespace PaymentSimple.WebHost.Controllers
         /// <exception cref="PaymentDoesntExistException"></exception>
         [HttpPost]
         [Route("{id}/voids")]
-        public async Task<ActionResult<PaymentResponse>> VoidPayment(PaymentShortRequest request)
+        public async Task<ActionResult<TransactionResponse>> VoidPayment(TransactionShortRequest request)
         {
             if (request.Id.Equals(Guid.Empty))
                 throw new PaymentIdIsNullException();
@@ -109,18 +115,13 @@ namespace PaymentSimple.WebHost.Controllers
             if (payment is null)
                 throw new PaymentDoesntExistException(request.Id.ToString());
 
-            var voidedPayment = new Payment()
-            {
-                Id = Guid.NewGuid(),
-                PaymentAmount = payment.PaymentAmount,
-                PaymentCurrency = payment.PaymentCurrency,
-                CardId = payment.CardId,
-                OrderId = payment.OrderId,
-                Status = (int)Status.Voided
-            };
-            await _paymentRepository.CreateAsync(voidedPayment);
+            payment.Status = (int)Status.Voided;
+            await _paymentRepository.UpdateAsync(payment);
 
-            return new PaymentResponse(voidedPayment);
+            var transaction = new Transaction(payment);
+            await _transactionRepository.CreateAsync(transaction);
+
+            return new TransactionResponse(payment);
         }
 
         /// <summary>
@@ -131,7 +132,7 @@ namespace PaymentSimple.WebHost.Controllers
         /// <exception cref="PaymentDoesntExistException"></exception>
         [HttpPut]
         [Route("{id}/capture")]
-        public async Task<ActionResult<PaymentResponse>>CapturePayment(PaymentShortRequest request)
+        public async Task<ActionResult<TransactionResponse>>CapturePayment(TransactionShortRequest request)
         {
             if (request.Id.Equals(Guid.Empty))
                 throw new PaymentIdIsNullException();
@@ -140,18 +141,13 @@ namespace PaymentSimple.WebHost.Controllers
             if (payment is null)
                 throw new PaymentDoesntExistException(request.Id.ToString());
 
-            var capturedPayment = new Payment()
-            {
-                Id = Guid.NewGuid(),
-                PaymentAmount = payment.PaymentAmount,
-                PaymentCurrency = payment.PaymentCurrency,
-                CardId = payment.CardId,
-                OrderId = payment.OrderId,
-                Status = (int)Status.Captured
-            };
-            await _paymentRepository.CreateAsync(capturedPayment);
+            payment.Status = (int)Status.Captured;
+            await _paymentRepository.UpdateAsync(payment);
 
-            return new PaymentResponse(capturedPayment);
+            var transaction = new Transaction(payment);
+            await _transactionRepository.CreateAsync(transaction);
+
+            return new TransactionResponse(payment);
         }
     }
 }

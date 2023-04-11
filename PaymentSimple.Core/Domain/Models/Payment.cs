@@ -19,5 +19,7 @@ namespace PaymentSimple.Core.Domain.Models
         public virtual Order Order { get; set; }
 
         public int Status { get; set; }
+
+        public virtual List<Transaction> Transactions { get; set; } = new List<Transaction>();
     }
 }

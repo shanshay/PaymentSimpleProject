@@ -3,14 +3,14 @@ using PaymentSimple.WebHost.Extensions;
 
 namespace PaymentSimple.WebHost.Models
 {
-    public class PaymentResponse
+    public class TransactionResponse
     {
-        public PaymentResponse()
+        public TransactionResponse()
         {
 
         }
 
-        public PaymentResponse(Payment payment)
+        public TransactionResponse(Payment payment)
         {
             Id = payment.Id;
             Status = payment.Status.GetStatusValue();

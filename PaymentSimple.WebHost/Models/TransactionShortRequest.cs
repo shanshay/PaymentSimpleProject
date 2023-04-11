@@ -1,6 +1,6 @@
 ﻿namespace PaymentSimple.WebHost.Models
 {
-    public class PaymentShortRequest
+    public class TransactionShortRequest
     {
         public Guid Id { get; set; }
 
