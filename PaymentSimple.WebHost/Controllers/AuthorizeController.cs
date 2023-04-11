@@ -103,23 +103,15 @@ namespace PaymentSimple.WebHost.Controllers
         public async Task<ActionResult<PaymentResponse>> VoidPayment(PaymentShortRequest request)
         {
             if (request.Id.Equals(Guid.Empty))
-                throw new Exception("Payment Id is null!");
+                throw new PaymentIdIsNullException();
 
             var payment = await _paymentRepository.GetByIdAsync(request.Id);
             if (payment is null)
                 throw new PaymentDoesntExistException(request.Id.ToString());
 
-            var voidedPayment = new Payment()
-            {
-                Id = Guid.NewGuid(),
-                PaymentAmount = payment.PaymentAmount,
-                PaymentCurrency = payment.PaymentCurrency,
-                CardId = payment.Card.Id,
-                OrderId = payment.OrderId,
-                Status = (int)Status.Voided
-            };
+            payment.Status = (int)Status.Voided;
 
-            await _paymentRepository.AddAsync(voidedPayment);
+            await _paymentRepository.UpdateAsync(payment);
 
             return new PaymentResponse(payment);
         }
@@ -135,25 +127,17 @@ namespace PaymentSimple.WebHost.Controllers
         public async Task<ActionResult<PaymentResponse>>CapturePayment(PaymentShortRequest request)
         {
             if (request.Id.Equals(Guid.Empty))
-                throw new Exception("Payment Id is null!");
+                throw new PaymentIdIsNullException();
 
             var payment = await _paymentRepository.GetByIdAsync(request.Id);
             if (payment is null)
                 throw new Exception($"Payment with id {request.Id} doesn't exist");
 
-            var capturedPayment = new Payment()
-            {
-                Id = Guid.NewGuid(),
-                PaymentAmount = payment.PaymentAmount,
-                PaymentCurrency = payment.PaymentCurrency,
-                CardId = payment.Card.Id,
-                OrderId = payment.OrderId,
-                Status = (int)Status.Captured
-            };
+            payment.Status = (int)Status.Voided;
 
-            await _paymentRepository.AddAsync(capturedPayment);
+            await _paymentRepository.UpdateAsync(payment);
 
-            return new PaymentResponse(capturedPayment);
+            return new PaymentResponse(payment);
         }
     }
 }
