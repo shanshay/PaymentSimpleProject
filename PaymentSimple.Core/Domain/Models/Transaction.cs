@@ -23,7 +23,7 @@ namespace PaymentSimple.Core.Domain.Models
 
         public virtual Order Order { get; set; }
 
-        public DateTime DateTime { get; set; } 
+        public DateTime DateTime { get; set; }
         
         public int Status { get; set; }
     }

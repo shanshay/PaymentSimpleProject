@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PaymentSimple.Core.Abstractions.Repositories;
 using PaymentSimple.Core.Domain.Models;
+using PaymentSimple.DataAccess;
 using PaymentSimple.Exceptions;
 using PaymentSimple.WebHost.Extensions;
 using PaymentSimple.WebHost.Models;
@@ -15,16 +16,19 @@ namespace PaymentSimple.WebHost.Controllers
         private readonly IRepository<Payment> _paymentRepository;
         private readonly IRepository<Card> _cardRepository;
         private readonly IRepository<Transaction> _transactionRepository;
+        private readonly DataContext _dataContext;
         private readonly int pageSize = 2;
 
         public AuthorizeController(
             IRepository<Payment> paymentRepository,
             IRepository<Card> cardRepository,
-            IRepository<Transaction> transactionRepository)
+            IRepository<Transaction> transactionRepository,
+            DataContext dataContext)
         {
             _paymentRepository = paymentRepository;
             _cardRepository = cardRepository;
             _transactionRepository = transactionRepository;
+            _dataContext = dataContext;
         }
 
         /// <summary>
@@ -68,6 +72,8 @@ namespace PaymentSimple.WebHost.Controllers
         [HttpPost]
         public async Task<ActionResult<TransactionResponse>> AuthorizePayment(AuthorizeRequest request)
         {
+            var success = false;
+
             if (request.Amount < 0)
                 throw new IncorrectRequestAmountException(request.Amount);
 
@@ -79,22 +85,33 @@ namespace PaymentSimple.WebHost.Controllers
             if (expiryDate < DateTime.Today)
                 throw new CardExpiredException(card.CardNumber);
 
-            var payment = new Payment()
+            var payment = new Payment();
+
+            using (var transact = _dataContext.Database.BeginTransaction())
             {
-                Id = Guid.NewGuid(),
-                PaymentAmount = request.Amount,
-                PaymentCurrency = request.Currency,
-                CardId = card.Id,
-                OrderId = Guid.Parse(request.OrderReference),
-                Status = (int)Status.Authorized
-            };
+                try
+                {
+                    payment.Id = Guid.NewGuid();
+                    payment.PaymentAmount = request.Amount;
+                    payment.PaymentCurrency = request.Currency;
+                    payment.CardId = card.Id;
+                    payment.OrderId = Guid.Parse(request.OrderReference);
+                    payment.Status = (int)Status.Authorized;                    
 
-            await _paymentRepository.CreateAsync(payment);
+                    await _paymentRepository.CreateAsync(payment);
 
-            var transaction = new Transaction(payment);
-            await _transactionRepository.CreateAsync(transaction);
+                    var transaction = new Transaction(payment);
+                    await _transactionRepository.CreateAsync(transaction);
 
-            return new TransactionResponse(payment);
+                    transact.Commit();
+                }
+                catch
+                {
+                    transact.Rollback();
+                }
+            }
+
+            return success ? new TransactionResponse(payment) : throw new TransactionProcessException();
         }
 
         /// <summary>
@@ -108,6 +125,7 @@ namespace PaymentSimple.WebHost.Controllers
         [Route("{id}/voids")]
         public async Task<ActionResult<TransactionResponse>> VoidPayment(TransactionShortRequest request)
         {
+            var success = false;
             if (request.Id.Equals(Guid.Empty))
                 throw new PaymentIdIsNullException();
 
@@ -115,13 +133,27 @@ namespace PaymentSimple.WebHost.Controllers
             if (payment is null)
                 throw new PaymentDoesntExistException(request.Id.ToString());
 
-            payment.Status = (int)Status.Voided;
-            await _paymentRepository.UpdateAsync(payment);
+            using (var transact = _dataContext.Database.BeginTransaction())
+            {
+                try
+                {
+                    payment.Status = (int)Status.Voided;
+                    await _paymentRepository.UpdateAsync(payment);
 
-            var transaction = new Transaction(payment);
-            await _transactionRepository.CreateAsync(transaction);
+                    var transaction = new Transaction(payment);
+                    await _transactionRepository.CreateAsync(transaction);
 
-            return new TransactionResponse(payment);
+                    transact.Commit();
+                    success = true;
+                    
+                }
+                catch
+                {
+                    transact.Rollback();
+                }
+            }
+
+            return success ? new TransactionResponse(payment) : throw new TransactionProcessException();
         }
 
         /// <summary>
@@ -134,6 +166,8 @@ namespace PaymentSimple.WebHost.Controllers
         [Route("{id}/capture")]
         public async Task<ActionResult<TransactionResponse>>CapturePayment(TransactionShortRequest request)
         {
+            var success = false;
+
             if (request.Id.Equals(Guid.Empty))
                 throw new PaymentIdIsNullException();
 
@@ -141,13 +175,25 @@ namespace PaymentSimple.WebHost.Controllers
             if (payment is null)
                 throw new PaymentDoesntExistException(request.Id.ToString());
 
-            payment.Status = (int)Status.Captured;
-            await _paymentRepository.UpdateAsync(payment);
+            using (var transact = _dataContext.Database.BeginTransaction())
+            {
+                try
+                {
+                    payment.Status = (int)Status.Captured;
+                    await _paymentRepository.UpdateAsync(payment);
 
-            var transaction = new Transaction(payment);
-            await _transactionRepository.CreateAsync(transaction);
+                    var transaction = new Transaction(payment);
+                    await _transactionRepository.CreateAsync(transaction);
 
-            return new TransactionResponse(payment);
-        }
+                    transact.Commit();
+                }
+                catch
+                {
+                    transact.Rollback();
+                }
+            }
+
+            return success ? new TransactionResponse(payment) : throw new TransactionProcessException();
+        }        
     }
 }
