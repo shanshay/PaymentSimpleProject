@@ -1,4 +1,4 @@
-﻿using Castle.Core.Resource;
+using Castle.Core.Resource;
 using Microsoft.AspNetCore.Mvc;
 using PaymentSimple.Core.Abstractions.Repositories;
 using PaymentSimple.Core.Domain.Models;
