@@ -36,7 +36,7 @@ namespace PaymentSimple.DataAccess.Repositories
             return entities;
         }
 
-        public async Task AddAsync(T entity)
+        public async Task CreateAsync(T entity)
         {
             await _dataContext.Set<T>().AddAsync(entity);
 
