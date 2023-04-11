@@ -128,7 +128,7 @@ namespace PaymentSimple.WebHost.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        /// <exception cref="Exception"></exception>
+        /// <exception cref="PaymentDoesntExistException"></exception>
         [HttpPut]
         [Route("{id}/capture")]
         public async Task<ActionResult<PaymentResponse>>CapturePayment(PaymentShortRequest request)
